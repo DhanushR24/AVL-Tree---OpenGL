@@ -142,7 +142,7 @@ struct node* insert(struct node* node, int key)
 
     /* Left Left Rotation case */
     if (bal > 1 && key <= node->left->key)
-        return rightRotate(node);
+         return rightRotate(node);
 
     /* Right Right Rotation case */
     if (bal < -1 && key >= node->right->key)
