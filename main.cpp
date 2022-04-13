@@ -10,6 +10,14 @@
 
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 
+void init()
+{
+    glClearColor(1, 1, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    gluOrtho2D(0, 500, 0, 500);
+}
+
 /* Data Structure for each node in the tree */
 struct node
 {
@@ -34,6 +42,66 @@ const GLfloat mat_ambient[]    = { 0.7f, 0.7f, 0.7f, 1.0f };
 const GLfloat mat_diffuse[]    = { 0.8f, 0.8f, 0.8f, 1.0f };
 const GLfloat mat_specular[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat high_shininess[] = { 100.0f };
+
+/* Coordinates of each rectangle (for reference)
+    int startRect[][2] = {
+        {-12,-7},
+        { 9,-7},
+        { 9, -2},
+        {-12, -2}
+    };
+
+    int aboutRect[][2] = {
+        {-12,-13},
+        { 9,-13},
+        { 9, -8},
+        {-12, -8}
+    };
+
+    int creditRect[][2] = {
+        {-12,-19},
+        { 9,-19},
+        { 9, -14},
+        {-12, -14}
+    };
+
+    int exitRect[][2] = {
+        {-12,-25},
+        { 9,-25},
+        { 9, -20},
+        {-12, -20}
+    };
+*/
+
+int rectangles[4][4][2] = {
+    {
+        {-12,-7},
+        { 9,-7},
+        { 9, -2},
+        {-12, -2}
+    },
+    {
+        {-12,-13},
+        { 9,-13},
+        { 9, -8},
+        {-12, -8}
+    },
+    {
+        {-12,-19},
+        { 9,-19},
+        { 9, -14},
+        {-12, -14}
+    },
+    {
+        {-12,-25},
+        { 9,-25},
+        { 9, -20},
+        {-12, -20}
+    }
+};
+
+
+int currentBox = -1;
 
 // Global Variables - End
 
@@ -125,7 +193,7 @@ struct node* insert(struct node* node, int key)
 
     if (key < node->key)
         node->left  = insert(node->left, key);
-    else
+    else if(key > node->key)
         node->right = insert(node->right, key);
 
     display();      /* Display Tree after normal BST Insertion */
@@ -197,10 +265,10 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
     return;
 
     float radius = 1.5;
-    float left_angle = 245;
-    float right_angle = 115;
-    float branch_length = 12 - level*2.5;
-    float angle_change = 15;
+    float left_angle = 250;
+    float right_angle = 110;
+    float branch_length = 21 - level*2.5;
+    float angle_change = 20;
 
     /* Draw the current node */
     if(t_root==current)
@@ -244,19 +312,41 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
         glColor3f(0.0,0.0,0.0);
         draw_line(x1,y1,x2,y2);
     }
+}
 
+void drawBox(int rectangle[][2])
+{
+    glBegin(GL_LINE_LOOP);
+        for(int i=0; i<4; i++)
+            glVertex2iv(rectangle[i]);
+    glEnd();
+}
+
+void drawBoxes()
+{
+    for(int i=0; i<4; i++)
+    {
+        if(i==currentBox)
+            glColor3f(1, 0, 0);
+        else
+            glColor3f(0.8, 0.8, 0.8);
+
+        drawBox(rectangles[i]);
+    }
 }
 
 void display()
 {
+
     if(page==0)
     {
         glClearColor (1,1,1,1.0);
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
         glTranslatef(0,10,-30);
-        glColor3f(0.0,0.0,0.0);
+        glColor3f(1, 0, 0);
 
+        drawBoxes();
         drawFirstPage();
         glutSwapBuffers();
     }
@@ -268,13 +358,13 @@ void display()
         glTranslatef(0,10,-30);
         glColor3f(1,1,1);
 
-        drawNode(root,0,0,0);
+        drawNode(root,0, 12, 0);
 
         glutSwapBuffers();
     }
     if(page==2)
     {
-          glClearColor (1,1,1,1.0);
+        glClearColor (1,1,1,1.0);
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
         glTranslatef(0,10,-30);
@@ -295,7 +385,6 @@ void display()
         printCredits();
         glutSwapBuffers();
     }
-
 }
 void printAbout()
 {
@@ -361,7 +450,7 @@ void drawFirstPage()
     char buffer[50]="AVL TREE CONSTRUCTION ";
     glColor3f(0.0,0.0,0.0);
 
-    glRasterPos3f(-9,1,1.5);
+    glRasterPos3f(-12,1,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
@@ -384,6 +473,8 @@ void drawFirstPage()
     glRasterPos3f(-5,-22,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
+
+
 }
 
 void reshape (int w, int h)
@@ -391,8 +482,10 @@ void reshape (int w, int h)
     glViewport (0, 0, (GLsizei)w, (GLsizei)h);
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
-    gluPerspective (60, (GLfloat)w / (GLfloat)h, 0.1, 100.0);
+    gluPerspective (90, (GLfloat)w / (GLfloat)h, 0.1, 100.0);
     glMatrixMode (GL_MODELVIEW);
+
+    // printf("%d, %d", w, h);
 }
 
 void keyboard(unsigned char key,int x,int y)
@@ -458,38 +551,69 @@ void keyboard(unsigned char key,int x,int y)
     }
 }
 
+void checkMousePosition(int x, int y)
+{
+
+}
+
+void mouse(int btn, int state, int x, int y)
+{
+    if(btn==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
+    {
+        page = currentBox+1;
+        display();
+    }
+}
+
+void mousePassiveMotion(int x, int y)
+{
+    if(page==0)
+    {
+        if(y>290 && y<600)
+        {
+            if(y>290 && y<=364)
+            {
+                currentBox = 0;
+            }
+            else if(y>364 && y<=442)
+            {
+                currentBox = 1;
+            }
+            else if(y>442 && y<525)
+            {
+                currentBox = 2;
+            }
+            else
+            {
+                currentBox = 3;
+            }
+        }
+        else
+        {
+            currentBox = -1;
+        }
+
+        display();
+    }
+}
+
 int main (int argc, char **argv)
 {
 
-    glutInit (&argc, argv);
+    glutInit(&argc, argv);
     glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
-    glutInitWindowSize (640, 480);
     glutInitWindowPosition (0, 0);
+    glutInitWindowSize (840, 640);
     glutCreateWindow ("AVL tree : A self balancing B-Tree");
+    //init();
     glutDisplayFunc (display);
     glutReshapeFunc (reshape);
     glutKeyboardFunc (keyboard);
-
-
+    glutMouseFunc(mouse);
+    glutPassiveMotionFunc(mousePassiveMotion);
 
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_LIGHT0);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_LIGHTING);
-
-    glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
     glutMainLoop ();
-
-
     return 0;
 }
