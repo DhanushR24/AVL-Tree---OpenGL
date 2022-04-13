@@ -100,8 +100,22 @@ int rectangles[4][4][2] = {
     }
 };
 
+int rectanglesNav[2][4][2] = {
+    {
+        {-42, 14},
+        {-34, 14},
+        {-34, 17},
+        {-42, 17}
+    },
+    {
+        { 38, 14},
+        { 46, 14},
+        { 46, 17},
+        { 38, 17}
+    }
+};
 
-int currentBox = -1;
+int currentBox = -1, backExit=-1;
 
 // Global Variables - End
 
@@ -335,6 +349,42 @@ void drawBoxes()
     }
 }
 
+void displayNav()
+{
+    glColor3f(0.0,0.0,0.0);
+
+    glRasterPos3f(-40, 15, 0);
+    char text[50] = " BACK ";
+    for (int i = 0; text[i] != '\0'; i++)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+
+    strcpy(text, " AVL TREE ");
+    glRasterPos3f(-6, 14, 0);
+    for (int i = 0; text[i] != '\0'; i++)
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+
+    glRasterPos3f( 40, 15, 0);
+    strcpy(text, " EXIT ");
+    for (int i = 0; text[i] != '\0'; i++)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+
+
+
+    glColor3f(1, 0, 0);
+    if(backExit != -1)
+        drawBox(rectanglesNav[backExit]);
+
+    glColor3f(0.8, 0.8, 0.8);
+    drawBox(rectanglesNav[1]);
+    drawBox(rectanglesNav[0]);
+
+
+    glColor3f(1, 0, 0);
+
+    if(backExit != -1)
+        rectanglesNav[backExit];
+}
+
 void display()
 {
 
@@ -359,6 +409,7 @@ void display()
         glColor3f(1,1,1);
 
         drawNode(root,0, 12, 0);
+        displayNav();
 
         glutSwapBuffers();
     }
@@ -371,6 +422,7 @@ void display()
         glColor3f(1,1,1);
 
         printAbout();
+        displayNav();
         glutSwapBuffers();
     }
 
@@ -383,8 +435,11 @@ void display()
         glColor3f(1,1,1);
 
         printCredits();
+        displayNav();
         glutSwapBuffers();
     }
+    if(page==4)
+        exit(0);
 }
 void printAbout()
 {
@@ -433,13 +488,13 @@ void printCredits()
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
-    strcpy(buffer,"Abhinav I");
+    strcpy(buffer,"Dhanush Raj");
     glRasterPos3f(-5,-5.5,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,buffer[i]);
 
 
-    strcpy(buffer,"Dhananjay Muddappa ");
+    strcpy(buffer,"Dinesh Kudva");
     glRasterPos3f(-5,-9,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,buffer[i]);
@@ -473,8 +528,6 @@ void drawFirstPage()
     glRasterPos3f(-5,-22,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
-
-
 }
 
 void reshape (int w, int h)
@@ -484,7 +537,6 @@ void reshape (int w, int h)
     glLoadIdentity ();
     gluPerspective (90, (GLfloat)w / (GLfloat)h, 0.1, 100.0);
     glMatrixMode (GL_MODELVIEW);
-
     // printf("%d, %d", w, h);
 }
 
@@ -558,10 +610,28 @@ void checkMousePosition(int x, int y)
 
 void mouse(int btn, int state, int x, int y)
 {
-    if(btn==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
+    if(page == 0)
     {
-        page = currentBox+1;
-        display();
+        if(btn==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
+        {
+            page = currentBox+1;
+            display();
+        }
+    }
+    else
+    {
+        if(y>45 && y<85)
+        {
+            if(x <= 770)
+            {
+                page = 0;
+                display();
+            }
+            else
+            {
+                exit(0);
+            }
+        }
     }
 }
 
@@ -593,6 +663,25 @@ void mousePassiveMotion(int x, int y)
             currentBox = -1;
         }
 
+        display();
+    }
+    else
+    {
+        if(y>45 && y<85)
+        {
+            if(x <= 770)
+            {
+                backExit = 0;
+            }
+            else
+            {
+                backExit = 1;
+            }
+        }
+        else
+        {
+            backExit = -1;
+        }
         display();
     }
 }
