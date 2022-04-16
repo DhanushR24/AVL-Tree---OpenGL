@@ -9,6 +9,7 @@
 #include <time.h>
 
 #define max(x, y) (((x) > (y)) ? (x) : (y))
+#define PI 3.14
 
 void init()
 {
@@ -32,16 +33,6 @@ struct node* root = NULL;           /* Initialize Root Node to NULL */
 struct node* current=NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
 
 int result=0,page=0;                       /* Store the current number to be inputted*/
-
-const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
-const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };        /*Variables used for lighting and shading effects*/
-const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
-
-const GLfloat mat_ambient[]    = { 0.7f, 0.7f, 0.7f, 1.0f };
-const GLfloat mat_diffuse[]    = { 0.8f, 0.8f, 0.8f, 1.0f };
-const GLfloat mat_specular[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
-const GLfloat high_shininess[] = { 100.0f };
 
 /* Coordinates of each rectangle (for reference)
     int startRect[][2] = {
@@ -261,13 +252,51 @@ void draw_line(float x1,float y1,float x2, float y2)
     glVertex2f(x2,y2);
     glEnd();
 }
+
+
+
 /* Function to display the text */
 void draw_text(char* text,float x, float y)
 {
     int i;
-    glRasterPos3f(x-0.5,y-0.5,1.5);
+    glRasterPos3f(x-0.4, y-0.4, 1);
     for (i = 0; text[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+}
+
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius){
+	int i;
+	int triangleAmount = 20; //# of triangles used to draw circle
+
+	//GLfloat radius = 0.8f; //radius
+	GLfloat twicePi = 2.0f * PI;
+
+	glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(x, y); // center of circle
+		for(i = 0; i <= triangleAmount;i++) {
+			glVertex2f(
+		            x + (radius * cos(i *  twicePi / triangleAmount)),
+			    y + (radius * sin(i * twicePi / triangleAmount))
+			);
+		}
+	glEnd();
+}
+
+void drawHollowCircle(GLfloat x, GLfloat y, GLfloat radius){
+	int i;
+	int lineAmount = 100; //# of triangles used to draw circle
+
+	//GLfloat radius = 0.8f; //radius
+	GLfloat twicePi = 2.0f * PI;
+
+	glBegin(GL_LINE_LOOP);
+		for(i = 0; i <= lineAmount;i++) {
+			glVertex2f(
+			    x + (radius * cos(i *  twicePi / lineAmount)),
+			    y + (radius* sin(i * twicePi / lineAmount))
+			);
+		}
+	glEnd();
 }
 
 /* A recursive function to draw a binary tree */
@@ -291,10 +320,11 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
     else
         glColor3f(1.0,0.0,0.0);     /* else set color of node to red */
 
-    glPushMatrix();
-        glTranslated(x1,y1,0);              /* Draw the node*/
-        glutSolidSphere(radius,50,50);
-    glPopMatrix();
+
+
+    drawFilledCircle(x1, y1, radius);
+    glColor3f(0, 0, 0);
+    drawHollowCircle(x1, y1, radius);
 
     sprintf(buff,"%d",t_root->key); //atoi
     glColor3f(1.0,1.0,1.0);
