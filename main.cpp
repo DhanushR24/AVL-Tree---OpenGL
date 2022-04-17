@@ -11,6 +11,10 @@
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define PI 3.14
 
+#define TRUE 1
+#define FALSE 0
+
+
 void init()
 {
     glClearColor(1, 1, 1, 1);
@@ -29,42 +33,17 @@ struct node
 };
 
 // Global Variables - Start
-struct node* root = NULL;           /* Initialize Root Node to NULL */
-struct node* current=NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
+struct node* root = NULL;           /* Initialize Root Node (Start - AVL) to NULL */
+struct node* AVLroot = NULL;           /* Initialize Root Node (Compare - AVL) to NULL */
+struct node* BSTroot = NULL;           /* Initialize Root Node (Compare - BST) to NULL */
+struct node* current = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
+
+struct node* currentAVL = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
+struct node* currentBST = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
 
 int result=0,page=0;                       /* Store the current number to be inputted*/
 
-/* Coordinates of each rectangle (for reference)
-    int startRect[][2] = {
-        {-12,-7},
-        { 9,-7},
-        { 9, -2},
-        {-12, -2}
-    };
-
-    int aboutRect[][2] = {
-        {-12,-13},
-        { 9,-13},
-        { 9, -8},
-        {-12, -8}
-    };
-
-    int creditRect[][2] = {
-        {-12,-19},
-        { 9,-19},
-        { 9, -14},
-        {-12, -14}
-    };
-
-    int exitRect[][2] = {
-        {-12,-25},
-        { 9,-25},
-        { 9, -20},
-        {-12, -20}
-    };
-*/
-
-int rectangles[4][4][2] = {
+int rectangles[5][4][2] = {
     {
         {-12,-7},
         { 9,-7},
@@ -88,6 +67,12 @@ int rectangles[4][4][2] = {
         { 9,-25},
         { 9, -20},
         {-12, -20}
+    },
+    {
+        {-12,-32},
+        { 9,-32},
+        { 9, -27},
+        {-12, -27}
     }
 };
 
@@ -129,7 +114,7 @@ struct node* newNode(int key)
 {
     struct node* node = (struct node*)
                         malloc(sizeof(struct node));
-    node->key   = key;
+    node->key    = key;
     node->left   = NULL;
     node->right  = NULL;
     node->height = 1;  /* New node is initially added at leaf*/
@@ -188,7 +173,7 @@ void sleep(unsigned int mseconds)
 }
 
 /* Function to Insert a node into the tree and perform balancing*/
-struct node* insert(struct node* node, int key)
+struct node* insert(struct node* node, int key, int avl=1)
 {
     /* 1.  Perform the normal BST rotation */
     if (node == NULL)
@@ -197,47 +182,51 @@ struct node* insert(struct node* node, int key)
     sleep(1);
 
     if (key < node->key)
-        node->left  = insert(node->left, key);
+        node->left  = insert(node->left, key, avl);
     else if(key > node->key)
-        node->right = insert(node->right, key);
+        node->right = insert(node->right, key, avl);
 
-    display();      /* Display Tree after normal BST Insertion */
+    /* Display Tree after normal BST Insertion */
+    glutPostRedisplay();
 
     sleep(1);
 
-    /* 2. Update height of this ancestor node */
-    node->height = max(height(node->left), height(node->right)) + 1;
-
-
-    /* 3. Get the balance factor of this ancestor node to check whether
-       this node became unbalanced */
-    int bal = getBalance(node);
-
-    /* Left Left Rotation case */
-    if (bal > 1 && key <= node->left->key)
-         return rightRotate(node);
-
-    /* Right Right Rotation case */
-    if (bal < -1 && key >= node->right->key)
-        return leftRotate(node);
-
-    /* Left Right Rotation case */
-    if (bal > 1 && key >= node->left->key)
+    if(avl == TRUE)
     {
-        node->left =  leftRotate(node->left);
-        display();
-        sleep(1);
-        return rightRotate(node);
-    }
+        /* 2. Update height of this ancestor node */
+        node->height = max(height(node->left), height(node->right)) + 1;
 
-   /* Right Left Rotation case */
-    if (bal < -1 && key <= node->right->key)
-    {
-        node->right = rightRotate(node->right);
+        /* 3. Get the balance factor of this ancestor node to check whether
+           this node became unbalanced */
+        int bal = getBalance(node);
 
-        display();
-        sleep(1);
-        return leftRotate(node);
+        /* Left Left Rotation case */
+        if (bal > 1 && key <= node->left->key)
+             return rightRotate(node);
+
+        /* Right Right Rotation case */
+        if (bal < -1 && key >= node->right->key)
+            return leftRotate(node);
+
+        /* Left Right Rotation case */
+        if (bal > 1 && key >= node->left->key)
+        {
+            node->left =  leftRotate(node->left);
+
+            glutPostRedisplay();
+            sleep(1);
+            return rightRotate(node);
+        }
+
+       /* Right Left Rotation case */
+        if (bal < -1 && key <= node->right->key)
+        {
+            node->right = rightRotate(node->right);
+
+            glutPostRedisplay();
+            sleep(1);
+            return leftRotate(node);
+        }
     }
 
     /* return the (unchanged) node pointer */
@@ -253,15 +242,16 @@ void draw_line(float x1,float y1,float x2, float y2)
     glEnd();
 }
 
-
-
 /* Function to display the text */
 void draw_text(char* text,float x, float y)
 {
     int i;
-    glRasterPos3f(x-0.4, y-0.4, 1);
+    y = y - 0.5;
+    x += x<=0? +0.4: -0.4;
+
+    glRasterPos3f(x, y, 1);
     for (i = 0; text[i] != '\0'; i++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
 }
 
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius){
@@ -275,7 +265,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius){
 		glVertex2f(x, y); // center of circle
 		for(i = 0; i <= triangleAmount;i++) {
 			glVertex2f(
-		            x + (radius * cos(i *  twicePi / triangleAmount)),
+                x + (radius * cos(i *  twicePi / triangleAmount)),
 			    y + (radius * sin(i * twicePi / triangleAmount))
 			);
 		}
@@ -284,7 +274,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius){
 
 void drawHollowCircle(GLfloat x, GLfloat y, GLfloat radius){
 	int i;
-	int lineAmount = 100; //# of triangles used to draw circle
+	int lineAmount = 200; //# of triangles used to draw circle
 
 	//GLfloat radius = 0.8f; //radius
 	GLfloat twicePi = 2.0f * PI;
@@ -300,17 +290,16 @@ void drawHollowCircle(GLfloat x, GLfloat y, GLfloat radius){
 }
 
 /* A recursive function to draw a binary tree */
-void drawNode(struct node* t_root,float x1,float y1,int level)
+void drawNode(struct node* t_root,float x1,float y1,int level, float radius = 1.5, float branchInitial = 20)
 {
     char buff[5];
 
     if (t_root==NULL)
     return;
 
-    float radius = 1.5;
     float left_angle = 250;
     float right_angle = 110;
-    float branch_length = 21 - level*2.5;
+    float branch_length = branchInitial - level*2.5;
     float angle_change = 20;
 
     /* Draw the current node */
@@ -319,7 +308,6 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
                                 Set color of node to green until its placed in its position */
     else
         glColor3f(1.0,0.0,0.0);     /* else set color of node to red */
-
 
 
     drawFilledCircle(x1, y1, radius);
@@ -339,7 +327,7 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
         //float m = (double)tan((double)radian);
         float x2 = x1 + branch_length * sin((double) radian);
         float y2 = y1 + branch_length * cos((double) radian);
-        drawNode(t_root->left,x2,y2,level+1);
+        drawNode(t_root->left,x2,y2,level+1, radius, branchInitial);
         glColor3f(0.0,0.0,0.0);
         draw_line(x1,y1,x2,y2);
     }
@@ -351,7 +339,7 @@ void drawNode(struct node* t_root,float x1,float y1,int level)
         //float m = (double)tan((double)radian);
         float x2 = x1 + branch_length * sin((double) radian);
         float y2 = y1 + branch_length * cos((double) radian);
-        drawNode(t_root->right,x2,y2,level+1);
+        drawNode(t_root->right,x2,y2,level+1, radius, branchInitial);
 
         glColor3f(0.0,0.0,0.0);
         draw_line(x1,y1,x2,y2);
@@ -368,7 +356,7 @@ void drawBox(int rectangle[][2])
 
 void drawBoxes()
 {
-    for(int i=0; i<4; i++)
+    for(int i=0; i<5; i++)
     {
         if(i==currentBox)
             glColor3f(1, 0, 0);
@@ -379,17 +367,25 @@ void drawBoxes()
     }
 }
 
-void displayNav()
+void displayNav(int compare = 0)
 {
     glColor3f(0.0,0.0,0.0);
 
     glRasterPos3f(-40, 15, 0);
-    char text[50] = " BACK ";
+    char text[80] = " BACK ";
     for (int i = 0; text[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
 
-    strcpy(text, " AVL TREE ");
-    glRasterPos3f(-6, 14, 0);
+    if(!compare)
+    {
+        strcpy(text, " AVL TREE ");
+        glRasterPos3f(-6, 14, 0);
+    }
+    else
+    {
+        strcpy(text, "BST TREE                          VS                          AVL TREE");
+        glRasterPos3f(-20, 14, 0);
+    }
     for (int i = 0; text[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
 
@@ -398,8 +394,6 @@ void displayNav()
     for (int i = 0; text[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
 
-
-
     glColor3f(1, 0, 0);
     if(backExit != -1)
         drawBox(rectanglesNav[backExit]);
@@ -407,12 +401,6 @@ void displayNav()
     glColor3f(0.8, 0.8, 0.8);
     drawBox(rectanglesNav[1]);
     drawBox(rectanglesNav[0]);
-
-
-    glColor3f(1, 0, 0);
-
-    if(backExit != -1)
-        rectanglesNav[backExit];
 }
 
 void display()
@@ -438,12 +426,27 @@ void display()
         glTranslatef(0,10,-30);
         glColor3f(1,1,1);
 
-        drawNode(root,0, 12, 0);
+        drawNode(root, 0, 12, 0);
         displayNav();
 
         glutSwapBuffers();
     }
     if(page==2)
+    {
+        current = NULL;
+        glClearColor (1.5,1.0,1.0,1.0);
+        glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glLoadIdentity();
+        glTranslatef(0,10,-30);
+        glColor3f(1,1,1);
+
+        drawNode(BSTroot,    -25, 12, 0, 1, 12);
+        drawNode(AVLroot,     25, 12, 0, 1, 12);
+        displayNav(1);
+
+        glutSwapBuffers();
+    }
+    if(page==3)
     {
         glClearColor (1,1,1,1.0);
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -456,7 +459,7 @@ void display()
         glutSwapBuffers();
     }
 
-    if(page==3)
+    if(page==4)
     {
         glClearColor (1,1,1,1.0);
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -468,9 +471,10 @@ void display()
         displayNav();
         glutSwapBuffers();
     }
-    if(page==4)
+    if(page==5)
         exit(0);
 }
+
 void printAbout()
 {
     int i;
@@ -505,8 +509,6 @@ void printAbout()
     glRasterPos3f(-11,-17,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,buffer[i]);
-
-
 }
 
 void printCredits()
@@ -544,18 +546,23 @@ void drawFirstPage()
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
-    strcpy(buffer,"2. ABOUT");
+    strcpy(buffer,"2. COMPARE");
     glRasterPos3f(-5,-11,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
-    strcpy(buffer,"3. CREDITS");
+    strcpy(buffer,"3. ABOUT");
     glRasterPos3f(-5,-16.5,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
-    strcpy(buffer,"4. EXIT");
+    strcpy(buffer,"4. CREDITS");
     glRasterPos3f(-5,-22,1.5);
+    for (i = 0; buffer[i] != '\0'; i++)
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
+
+    strcpy(buffer,"5. EXIT");
+    glRasterPos3f(-5,-29,1.5);
     for (i = 0; buffer[i] != '\0'; i++)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 }
@@ -578,20 +585,25 @@ void keyboard(unsigned char key,int x,int y)
         {
             case '1':
                 page=1;
-                display();
+                glutPostRedisplay();
                 break;
 
             case '2':
                 page=2;
-                display();
+                glutPostRedisplay();
                 break;
 
             case '3':
                 page=3;
-                display();
+                glutPostRedisplay();
                 break;
 
             case '4':
+                page=4;
+                glutPostRedisplay();
+                break;
+
+            case '5':
                 exit(0);
         }
     }
@@ -614,7 +626,7 @@ void keyboard(unsigned char key,int x,int y)
             case 'z':
                 root=insert(root,result);
 //               sleep(0.5);
-                display();
+                glutPostRedisplay();
                 result=0;
                 break;
             case 'x':
@@ -623,13 +635,41 @@ void keyboard(unsigned char key,int x,int y)
     }
     else if(page==2)
     {
-            page=0;
-            display();
+        switch(key)
+        {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                result=result*10+(key-'0');
+                break;
+            case 'z':
+                AVLroot = insert(AVLroot,result);
+                BSTroot = insert(BSTroot, result, FALSE);
+//               sleep(0.5);
+                glutPostRedisplay();
+                result=0;
+                break;
+            case 'x':
+                exit(0);
+            }
+
     }
     else if(page==3)
     {
             page=0;
-            display();
+            glutPostRedisplay();
+    }
+    else if(page==4)
+    {
+            page=0;
+            glutPostRedisplay();
     }
 }
 
@@ -645,7 +685,7 @@ void mouse(int btn, int state, int x, int y)
         if(btn==GLUT_LEFT_BUTTON && state==GLUT_DOWN)
         {
             page = currentBox+1;
-            display();
+            glutPostRedisplay();
         }
     }
     else
@@ -655,7 +695,8 @@ void mouse(int btn, int state, int x, int y)
             if(x <= 770)
             {
                 page = 0;
-                display();
+
+                glutPostRedisplay();
             }
             else
             {
@@ -669,7 +710,7 @@ void mousePassiveMotion(int x, int y)
 {
     if(page==0)
     {
-        if(y>290 && y<600)
+        if(y>290 && y<700)
         {
             if(y>290 && y<=364)
             {
@@ -683,17 +724,20 @@ void mousePassiveMotion(int x, int y)
             {
                 currentBox = 2;
             }
-            else
+            else if(y>525 && y<605)
             {
                 currentBox = 3;
+            }
+            else
+            {
+                currentBox = 4;
             }
         }
         else
         {
             currentBox = -1;
         }
-
-        display();
+        glutPostRedisplay();
     }
     else
     {
@@ -712,8 +756,29 @@ void mousePassiveMotion(int x, int y)
         {
             backExit = -1;
         }
-        display();
+
+        glutPostRedisplay();
     }
+}
+
+void menu(int item)
+{
+    switch(item)
+    {
+        case 0:
+            if(page == 1)
+            {
+                root = NULL;
+            }
+            else if(page == 2)
+            {
+                BSTroot = NULL;
+                AVLroot = NULL;
+            }
+            break;
+    }
+
+    glutPostRedisplay();
 }
 
 int main (int argc, char **argv)
@@ -730,6 +795,10 @@ int main (int argc, char **argv)
     glutKeyboardFunc (keyboard);
     glutMouseFunc(mouse);
     glutPassiveMotionFunc(mousePassiveMotion);
+
+    glutCreateMenu(menu);
+    glutAddMenuEntry("Refresh", 0);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     glEnable(GL_DEPTH_TEST);
 
