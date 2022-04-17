@@ -38,10 +38,12 @@ struct node* AVLroot = NULL;           /* Initialize Root Node (Compare - AVL) t
 struct node* BSTroot = NULL;           /* Initialize Root Node (Compare - BST) to NULL */
 struct node* current = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
 
-struct node* currentAVL = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
-struct node* currentBST = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
+// struct node* currentAVL = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
+// struct node* currentBST = NULL;          /* Initialize Current Node for highlighting(GreenColor)*/
 
-int result=0,page=0;                       /* Store the current number to be inputted*/
+int result=0, page=0;                       /* Store the current number to be inputted*/
+int len;
+char buffer[50]="Enter the number : ";
 
 int rectangles[5][4][2] = {
     {
@@ -429,6 +431,11 @@ void display()
         drawNode(root, 0, 12, 0);
         displayNav();
 
+
+        glColor3f(0, 0, 0);
+        glRasterPos3f(-12, -35, 1.5);
+        for (int i = 0; buffer[i] != '\0'; i++)
+            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
         glutSwapBuffers();
     }
     if(page==2)
@@ -443,6 +450,11 @@ void display()
         drawNode(BSTroot,    -25, 12, 0, 1, 12);
         drawNode(AVLroot,     25, 12, 0, 1, 12);
         displayNav(1);
+
+        glColor3f(0, 0, 0);
+        glRasterPos3f(-12, -35, 1.5);
+        for (int i = 0; buffer[i] != '\0'; i++)
+            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, buffer[i]);
 
         glutSwapBuffers();
     }
@@ -622,11 +634,19 @@ void keyboard(unsigned char key,int x,int y)
             case '8':
             case '9':
                 result=result*10+(key-'0');
+
+                len = strlen(buffer);
+                buffer[len] = key;
+                buffer[len+1] = '\0';
+
+                glutPostRedisplay();
                 break;
             case 'z':
                 root=insert(root,result);
 //               sleep(0.5);
                 glutPostRedisplay();
+
+                strcpy(buffer, "Enter the number : ");
                 result=0;
                 break;
             case 'x':
@@ -648,17 +668,25 @@ void keyboard(unsigned char key,int x,int y)
             case '8':
             case '9':
                 result=result*10+(key-'0');
+
+                len = strlen(buffer);
+                buffer[len] = key;
+                buffer[len+1] = '\0';
+
+                glutPostRedisplay();
                 break;
             case 'z':
                 AVLroot = insert(AVLroot,result);
                 BSTroot = insert(BSTroot, result, FALSE);
 //               sleep(0.5);
                 glutPostRedisplay();
+
+                strcpy(buffer, "Enter the number : ");
                 result=0;
                 break;
             case 'x':
                 exit(0);
-            }
+        }
 
     }
     else if(page==3)
@@ -710,21 +738,21 @@ void mousePassiveMotion(int x, int y)
 {
     if(page==0)
     {
-        if(y>290 && y<700)
+        if(y>300 && y<740)
         {
-            if(y>290 && y<=364)
+            if(y>300 && y<=384)
             {
                 currentBox = 0;
             }
-            else if(y>364 && y<=442)
+            else if(y>384 && y<=472)
             {
                 currentBox = 1;
             }
-            else if(y>442 && y<525)
+            else if(y>472 && y<565)
             {
                 currentBox = 2;
             }
-            else if(y>525 && y<605)
+            else if(y>565 && y<655)
             {
                 currentBox = 3;
             }
@@ -787,12 +815,13 @@ int main (int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
     glutInitWindowPosition (0, 0);
-    glutInitWindowSize (840, 640);
+    glutInitWindowSize (glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
     glutCreateWindow ("AVL tree : A self balancing B-Tree");
+    glutFullScreen();
     //init();
-    glutDisplayFunc (display);
-    glutReshapeFunc (reshape);
-    glutKeyboardFunc (keyboard);
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutPassiveMotionFunc(mousePassiveMotion);
 
