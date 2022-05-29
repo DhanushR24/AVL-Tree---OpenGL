@@ -170,7 +170,7 @@ int getBalance(struct node *N)
 
 void sleep(unsigned int mseconds)
 {
-    clock_t goal = mseconds*10 + clock();
+    clock_t goal = mseconds*1000 + clock();
     while (goal > clock());
 }
 
@@ -181,7 +181,7 @@ struct node* insert(struct node* node, int key, int avl=1)
     if (node == NULL)
         return(newNode(key));
 
-    sleep(1);
+   // sleep(1);
 
     if (key < node->key)
         node->left  = insert(node->left, key, avl);
@@ -189,9 +189,10 @@ struct node* insert(struct node* node, int key, int avl=1)
         node->right = insert(node->right, key, avl);
 
     /* Display Tree after normal BST Insertion */
-    glutPostRedisplay();
+    //glutPostRedisplay();
+    display();
 
-    sleep(1);
+   // sleep(1);
 
     if(avl == TRUE)
     {
@@ -203,20 +204,28 @@ struct node* insert(struct node* node, int key, int avl=1)
         int bal = getBalance(node);
 
         /* Left Left Rotation case */
-        if (bal > 1 && key <= node->left->key)
+        if (bal > 1 && key <= node->left->key){
+             sleep(2);
              return rightRotate(node);
+        }
 
         /* Right Right Rotation case */
         if (bal < -1 && key >= node->right->key)
+        {   sleep(2);
             return leftRotate(node);
+        }
+
 
         /* Left Right Rotation case */
         if (bal > 1 && key >= node->left->key)
         {
             node->left =  leftRotate(node->left);
 
+
+            sleep(2);
             glutPostRedisplay();
-            sleep(1);
+
+
             return rightRotate(node);
         }
 
@@ -225,8 +234,11 @@ struct node* insert(struct node* node, int key, int avl=1)
         {
             node->right = rightRotate(node->right);
 
-            glutPostRedisplay();
-            sleep(1);
+
+            sleep(2);
+           glutPostRedisplay();
+
+
             return leftRotate(node);
         }
     }
@@ -317,7 +329,7 @@ void drawNode(struct node* t_root,float x1,float y1,int level, float radius = 1.
     drawHollowCircle(x1, y1, radius);
 
     sprintf(buff,"%d",t_root->key); //atoi
-    glColor3f(1.0,1.0,1.0);
+    glColor3f(0,0,0);
     draw_text(buff,x1,y1);
             /* Display value of the node*/
 
